@@ -1,3 +1,17 @@
+/* Finding Palindromes & Semordnilaps
+
+  This document was originaly written by Alexander Nordgren, Gustav Moritz 
+
+  Description:
+
+  The program when excuted finds all Palindromes & Semordnilaps of a text file,
+  and then stores all of the words/phrases inside a new text file. The program also
+  shows how many words where found by each worker/thread, the total amount of words/phrases found, 
+  and the excecution time of the program. 
+
+*/
+
+
 #ifndef _REENTRANT 
 #define _REENTRANT 
 #endif 
@@ -44,13 +58,21 @@ double read_timer() {
     return (end.tv_sec - start.tv_sec) + 1.0e-6 * (end.tv_usec - start.tv_usec);
 }
 
+/* Converts text document to an array */
+string[] parseDictionaryFile() {
+}
+
 /* Finding if word exists in dictionary */
-bool binarySearch(){
+bool binarySearch() {
 }
 
 /* Checks if a word is a palindrome */
-bool isPalindrome(){
+bool isPalindrome() {
+}
 
+/* Method each worker/thread excecutes */
+void *Worker(void *arg) {
+  long myid = (long) arg;
 }
 
 /*
@@ -59,6 +81,27 @@ bool isPalindrome(){
  char *argv[] is an array of character pointers, where each element points 
  to a null-terminated string representing an argument passed to the program.
 */
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
+  long l; /* use long in case of a 64-bit system */
+  pthread_attr_t attr;
+  pthread_t workerid[MAXWORKERS];
 
+  /* set global thread attributes */
+  pthread_attr_init(&attr);
+  pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+
+  /* initialize mutex and condition variable */
+  pthread_mutex_init(&barrier, NULL);
+  pthread_cond_init(&go, NULL);
+
+  /* read command line args if any */
+  numWorkers = (argc > 1)? atoi(argv[1]) : MAXWORKERS;
+  if (numWorkers > MAXWORKERS) numWorkers = MAXWORKERS;
+  stripSize = size/numWorkers; // customise later
+
+  /* do the parallel work: create the workers */
+  start_time = read_timer();
+  for (l = 0; l < numWorkers; l++)
+    pthread_create(&workerid[l], &attr, Worker, (void *) l);
+  pthread_exit(NULL);
 }
