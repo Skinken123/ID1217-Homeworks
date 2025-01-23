@@ -58,6 +58,11 @@ double read_timer() {
     return (end.tv_sec - start.tv_sec) + 1.0e-6 * (end.tv_usec - start.tv_usec);
 }
 
+/* calculate work load for each worker/thread */
+void calculateWorkLoad() {
+
+}
+
 /* Converts text document to an array */
 string[] parseDictionaryFile() {
 }
@@ -97,7 +102,10 @@ int main(int argc, char *argv[]) {
   /* read command line args if any */
   numWorkers = (argc > 1)? atoi(argv[1]) : MAXWORKERS;
   if (numWorkers > MAXWORKERS) numWorkers = MAXWORKERS;
-  stripSize = size/numWorkers; // customise later
+ 
+  /* calculate work load for each worker/thread*/
+
+  /* parse dictionary file into global variable array*/
 
   /* do the parallel work: create the workers */
   start_time = read_timer();
