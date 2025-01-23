@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_WORD_LENGTH 100 // Maximum length of a word
+#define MAX_WORD_LENGTH 22 // Maximum length of a word
 #define TOTAL_WORDS 25143   // Total number of words
 
 /**
