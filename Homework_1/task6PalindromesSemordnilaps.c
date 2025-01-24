@@ -57,10 +57,18 @@ double read_timer() {
 }
 
 /* calculate work load for each worker/thread */
-void calculateWorkLoad(int numberOfWorkers) {
+void calculateWorkLoad(int (*array)[2] , int numberOfWorkers, int columns) {
   int workSlice = MAXWORDS/numberOfWorkers;
   int remainder = MAXWORDS - (workSlice*numberOfWorkers);
-  int 
+  int arrayIndex = 0;
+
+  for (int i = 0; i < numberOfWorkers; i++) {
+        for (int j = 0; j < columns; j++) {
+            array[i][j] = arrayIndex; 
+            if (j == 0) arrayIndex = arrayIndex + workSlice;
+            if (i == (numberOfWorkers-1) && j == 0) arrayIndex = arrayIndex + remainder;
+        }
+    }
 }
 
 /* Finding if word exists in dictionary */
