@@ -1,3 +1,25 @@
+/*
+C pointer syntax:
+To initialize a pointer use *, ex: *pPointer (using a small p before the variable you are pointing to is the naming convetion)
+A pointer points to the memory adress of a certain variable to extract the adress of a variable use & operator
+To extract the value at the memory adress the pointer is pointing to derefrence it with * operator.
+Example:
+int age = 10;
+int *pAge = &age; (pAge will point to the memory location of the variable age)
+printf(pAge); (will print the address the pointer is pointing to e.g. the adress of variable age. The * operator only needs to be used when creating the pointer)
+printf(*pAge); (will print the value stored at the address derefrencing the pointer, in this case the value is 10)
+*/
+/*
+C Array syntax:
+2D array = an array, where each element is an entire array useful if you need a matrix, grid, or table of data
+int numbers[2][3] = {
+                    {1, 2, 3},
+                    {4, 5, 6}
+                };
+[2] = number of rows
+[3] = number of columns
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

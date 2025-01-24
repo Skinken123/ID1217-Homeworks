@@ -10,8 +10,6 @@
   and the excecution time of the program. 
 
 */
-
-
 #ifndef _REENTRANT 
 #define _REENTRANT 
 #endif 
@@ -59,12 +57,10 @@ double read_timer() {
 }
 
 /* calculate work load for each worker/thread */
-void calculateWorkLoad() {
-
-}
-
-/* Converts text document to an array */
-string[] parseDictionaryFile() {
+void calculateWorkLoad(int numberOfWorkers) {
+  int workSlice = MAXWORDS/numberOfWorkers;
+  int remainder = MAXWORDS - (workSlice*numberOfWorkers);
+  int 
 }
 
 /* Finding if word exists in dictionary */
@@ -102,6 +98,7 @@ int main(int argc, char *argv[]) {
   /* read command line args if any */
   numWorkers = (argc > 1)? atoi(argv[1]) : MAXWORKERS;
   if (numWorkers > MAXWORKERS) numWorkers = MAXWORKERS;
+
  
   /* calculate work load for each worker/thread*/
 
