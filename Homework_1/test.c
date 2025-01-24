@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define MAX_WORD_LENGTH 22 // Maximum length of a word
 #define TOTAL_WORDS 25143   // Total number of words
@@ -45,6 +46,21 @@ int readWordsFromFile(const char *filename, char ***words, int maxWords) {
     return count; // Return the number of words read
 }
 
+/* Checks if a word is a palindrome */
+bool isPalindrome(char *str) {
+    int left = 0;
+    int right = strlen(str) - 1;
+
+    while (left < right) {
+        if (str[left] != str[right]) {
+            return false;
+        }
+        left++;
+        right--;
+    }
+    return true;
+}
+
 int main() {
     char **words = NULL; // Array of words
     int numWords;
@@ -59,12 +75,24 @@ int main() {
     // Print the total number of words
     printf("Total number of words: %d\n", numWords);
 
+    int palindromeCount = 0;
+    for (int i = 0; i < numWords; i++) {
+        if (isPalindrome(words[i])) {
+            palindromeCount++;
+        }
+    }
+
+    printf("Number of palindromes found: %d\n", palindromeCount);
+
+    /*
     // Print the 20th word if available
     if (numWords >= 20) {
         printf("The 20th word is: %s\n", words[25139]); // Index 19 is the 20th word
     } else {
         printf("The file contains fewer than 20 words.\n");
     }
+    */
+
 
     // Free memory
     for (int i = 0; i < numWords; i++) {
