@@ -86,6 +86,7 @@ bool isPalindrome(char *str) {
 int main() {
     char **words = NULL; // Array of words
     int numWords;
+    char resultStrings[TOTAL_WORDS][MAX_WORD_LENGTH];
 
     // Call the function to read words
     numWords = readWordsFromFile("words", &words, TOTAL_WORDS);
@@ -94,18 +95,19 @@ int main() {
         return 1;
     }
 
-    // Print the total number of words
-    printf("Total number of words: %d\n", numWords);
-
     int palindromeCount = 0;
     for (int i = 0; i < numWords; i++) {
         if (isPalindrome(words[i])) {
+            strcpy(resultStrings[palindromeCount], words[i]);
             palindromeCount++;
         }
     }
 
-    printf("Number of palindromes found: %d\n", palindromeCount);
-
+    printf("Total number of words: %d\n", numWords);
+    printf("Found %d palindrome(s):\n", palindromeCount);
+    for (int i = 0; i < palindromeCount; i++) {
+        printf("%s\n", resultStrings[i]);
+    }
     /*
     // Print the 20th word if available
     if (numWords >= 20) {
