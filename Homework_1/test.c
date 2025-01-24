@@ -69,7 +69,7 @@ int readWordsFromFile(const char *filename, char ***words, int maxWords) {
 }
 
 /* Checks if a word is a palindrome */
-bool isPalindrome(char *str) {
+bool isPalindrome(const char *str) {
     int left = 0;
     int right = strlen(str) - 1;
 
@@ -85,8 +85,8 @@ bool isPalindrome(char *str) {
 
 int main() {
     char **words = NULL; // Array of words
+    char **resultStrings = NULL; // Dynamic array for palindromes
     int numWords;
-    char resultStrings[TOTAL_WORDS][MAX_WORD_LENGTH];
 
     // Call the function to read words
     numWords = readWordsFromFile("words", &words, TOTAL_WORDS);
@@ -98,6 +98,17 @@ int main() {
     int palindromeCount = 0;
     for (int i = 0; i < numWords; i++) {
         if (isPalindrome(words[i])) {
+            resultStrings = realloc(resultStrings, (palindromeCount + 1) * sizeof(char *));
+            if (resultStrings == NULL) {
+                perror("Memory allocation failed");
+                return 1;
+            }
+
+            resultStrings[palindromeCount] = malloc(strlen(words[i]) + 1);
+            if (resultStrings[palindromeCount] == NULL) {
+                perror("Memory allocation failed");
+                return 1;
+            }
             strcpy(resultStrings[palindromeCount], words[i]);
             palindromeCount++;
         }
@@ -107,22 +118,15 @@ int main() {
     printf("Found %d palindrome(s):\n", palindromeCount);
     for (int i = 0; i < palindromeCount; i++) {
         printf("%s\n", resultStrings[i]);
+        free(resultStrings[i]); // Free each palindrome string
     }
-    /*
-    // Print the 20th word if available
-    if (numWords >= 20) {
-        printf("The 20th word is: %s\n", words[25139]); // Index 19 is the 20th word
-    } else {
-        printf("The file contains fewer than 20 words.\n");
-    }
-    */
+    free(resultStrings); // Free the array of pointers
 
-
-    // Free memory
+    // Free memory allocated for words
     for (int i = 0; i < numWords; i++) {
-        free(words[i]); // Free each allocated word
+        free(words[i]);
     }
-    free(words); // Free the array of pointers
+    free(words);
 
     return 0;
 }
