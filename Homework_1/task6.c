@@ -33,6 +33,7 @@ int numWorkers = 0;           /* number of workers */
 int numArrived = 0;       /* number who have arrived to the barrier*/
 int palindromeCount = 0;
 int semordnilapCount = 0;
+const int BOX_WIDTH = 55;
 
 double start_time, end_time; /* start and end times of parallel execution*/
 
@@ -179,6 +180,46 @@ bool binarySearch(char **words, const char *target) {
     return false; 
 }
 
+void printResults(double start_time, double end_time, int numWorkers, int sums[][2]) {
+    // Print the header
+    for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n| %-*s %-*s |\n", 40, "Word Analysis Results", BOX_WIDTH - 40 - 5, "");
+    for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n");
+
+    // Total words
+    printf("| %-40s %10d |\n", "Total number of words:", TOTAL_WORDS);
+    for (int i = 0; i < BOX_WIDTH; i++) printf("-");
+    printf("\n");
+
+    // Palindrome count
+    printf("| %-40s %10d |\n", "Palindrome(s) found:", palindromeCount);
+    for (int i = 0; i < BOX_WIDTH; i++) printf("-");
+    printf("\n");
+
+    // Semordnilap count
+    printf("| %-40s %10d |\n", "Semordnilap(s) found:", semordnilapCount);
+    for (int i = 0; i < BOX_WIDTH; i++) printf("-");
+    printf("\n");
+
+    // Execution time 
+    printf("| %-38s %.6f sec |\n", "Program execution time:", end_time - start_time);
+    for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n");
+
+    // Worker results
+    for (int i = 0; i < numWorkers; i++) {
+        printf("| Worker %-2d Found: %3d Palindromes & %3d Semordnilaps |\n",
+               i, sums[i][0], sums[i][1]);
+        for (int i = 0; i < BOX_WIDTH; i++) printf("-");
+        printf("\n");
+    }
+
+    // Footer
+    for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n");
+}
+
 /* Function to write results to a file */
 void writeResultsToFile(const char *filename) {
     FILE *file = fopen(filename, "w");
@@ -265,58 +306,17 @@ void *Worker(void *arg) {
   Barrier();
   end_time = read_timer();
   if (threadId == 0) {
-  const int BOX_WIDTH = 55;
   writeResultsToFile("results.txt");
-
-  // Print the header
-  for (int i = 0; i < BOX_WIDTH; i++) printf("=");
-    printf("\n| %-*s %-*s |\n", 40, "Word Analysis Results", BOX_WIDTH - 40 - 5, "");
-  for (int i = 0; i < BOX_WIDTH; i++) printf("=");
-    printf("\n");
-
-  // Total words
-  printf("| %-40s %10d |\n", "Total number of words:", TOTAL_WORDS);
-  for (int i = 0; i < BOX_WIDTH; i++) printf("-");
-    printf("\n");
-
-  // Palindrome count
-  printf("| %-40s %10d |\n", "Palindrome(s) found:", palindromeCount);
-  for (int i = 0; i < BOX_WIDTH; i++) printf("-");
-    printf("\n");
-
-  // Semordnilap count
-  printf("| %-40s %10d |\n", "Semordnilap(s) found:", semordnilapCount);
-  for (int i = 0; i < BOX_WIDTH; i++) printf("-");
-    printf("\n");
-
-  // Execution time 
-  printf("| %-38s %g sec |\n", "Program execution time:", end_time - start_time);
-  for (int i = 0; i < BOX_WIDTH; i++) printf("=");
-    printf("\n");
-
-  // Worker results
-  for (int i = 0; i < numWorkers; i++) {
-      printf("| Worker %-2d Found: %3d Palindromes & %3d Semordnilaps |\n",
-            i, sums[i][0], sums[i][1]);
-      for (int i = 0; i < BOX_WIDTH; i++) printf("-");
-        printf("\n");
-  }
-
-  // Footer
-  for (int i = 0; i < BOX_WIDTH; i++) printf("=");
-    printf("\n");
-
-
-    
-    // Free memory allocated for words
-    free(resultSemordnilaps); // Free the array of pointers
-    free(resultPalindromes); // Free the array of pointers
-    for (int i = 0; i < TOTAL_WORDS; i++) {
-        free(words[i]);
+  printResults(start_time, end_time, numWorkers, sums);
+      
+  // Free memory allocated for words
+  free(resultSemordnilaps); // Free the array of pointers
+  free(resultPalindromes); // Free the array of pointers
+  for (int i = 0; i < TOTAL_WORDS; i++) {
+      free(words[i]);
     }
-    free(words);
+  free(words);
 
-    
   }
   // Use the barrier to enable one of the workers to write the semordnilaps and palindromes to a result text file
   // This worker will also print the total number of words found as well as how many each thread found
