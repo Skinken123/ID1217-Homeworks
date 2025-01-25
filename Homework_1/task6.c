@@ -296,7 +296,7 @@ void *Worker(void *arg) {
 
   // Worker results
   for (int i = 0; i < numWorkers; i++) {
-      printf("| Worker %-2d Found %3d Palindromes & %3d Semordnilaps %-1s|\n",
+      printf("| Worker %-2d Found: %3d Palindromes & %3d Semordnilaps |\n",
             i, sums[i][0], sums[i][1]);
       for (int i = 0; i < BOX_WIDTH; i++) printf("-");
         printf("\n");
