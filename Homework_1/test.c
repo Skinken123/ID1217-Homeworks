@@ -74,7 +74,7 @@ bool isPalindrome(const char *str) {
     int right = strlen(str) - 1;
 
     while (left < right) {
-        if (str[left] != str[right]) {
+        if (tolower(str[left]) != tolower(str[right])) {
             return false;
         }
         left++;
