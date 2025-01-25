@@ -83,6 +83,7 @@ bool isPalindrome(const char *str) {
     return true;
 }
 
+/* Binary Searches for word */
 bool binarySearch(char **words, int numWords, const char *target) {
     int left = 0;
     int right = numWords - 1;
@@ -102,6 +103,7 @@ bool binarySearch(char **words, int numWords, const char *target) {
     return false; 
 }
 
+/* Reverses a string */
 void reverseString(char *str) {
     int start = 0;
     int end = strlen(str) - 1;
@@ -118,59 +120,83 @@ void reverseString(char *str) {
 
 int main() {
     char **words = NULL; // Array of words
-    char **resultStrings = NULL; // Dynamic array for palindromes
+    char **resultPalindromes = NULL; // Dynamic array for palindromes
+    char **resultSemordnilaps = NULL; // Dynamic array for Semordnilaps
     int numWords;
-    char str[] = "hello"; //temporary word to reverse
+    char reversed[MAX_WORD_LENGTH];
 
-    // Call the function to read words
-    numWords = readWordsFromFile("words", &words, TOTAL_WORDS);
+    
+    numWords = readWordsFromFile("words", &words, TOTAL_WORDS); // Call the function to read words
     if (numWords == -1) {
         fprintf(stderr, "Failed to read words from file.\n");
         return 1;
     }
 
+    int palindromeCount = 0;
+    for (int i = 0; i < numWords; i++) { // First loop for palindromes
+        if (isPalindrome(words[i])) {
+            resultPalindromes = realloc(resultPalindromes, (palindromeCount + 1) * sizeof(char *));
+            if (resultPalindromes == NULL) {
+                perror("Memory allocation failed");
+                return 1;
+            }
 
-    int SemordnilapCount = 0;
-    const char *testWord = "sussy"; // Replace with the word you want to check
-    if (binarySearch(words, numWords, testWord)) {
-        printf("The word '%s' is present in the array.\n", testWord);
-        SemordnilapCount++;
-    } else {
-        printf("The word '%s' is NOT present in the array.\n", testWord);
+            resultPalindromes[palindromeCount] = malloc(strlen(words[i]) + 1);
+            if (resultPalindromes[palindromeCount] == NULL) {
+                perror("Memory allocation failed");
+                return 1;
+            }
+            strcpy(resultPalindromes[palindromeCount], words[i]);
+            palindromeCount++;
+        }
     }
 
-    // reverse word function call
-    reverseString(str);
-    printf("reversed string: %s\n", str);
-
-    int palindromeCount = 0;
-    for (int i = 0; i < numWords; i++) {
-        if (isPalindrome(words[i])) {
-            resultStrings = realloc(resultStrings, (palindromeCount + 1) * sizeof(char *));
-            if (resultStrings == NULL) {
-                perror("Memory allocation failed");
-                return 1;
+    int SemordnilapCount = 0;
+    for (int i = 0; i < numWords; i++) { // Second loop for Semordnilaps, only if not a palindrome
+        bool isAlreadyPalindrome = false; // Skip the word if it's already a palindrome
+        for (int j = 0; j < palindromeCount; j++) {
+            if (strcmp(words[i], resultPalindromes[j]) == 0) {
+                isAlreadyPalindrome = true;
+                break;
             }
+        }
 
-            resultStrings[palindromeCount] = malloc(strlen(words[i]) + 1);
-            if (resultStrings[palindromeCount] == NULL) {
-                perror("Memory allocation failed");
-                return 1;
+        if (!isAlreadyPalindrome) { // If not a palindrome, check for Semordnilap
+            strcpy(reversed, words[i]);
+            reverseString(reversed);
+            const char *testWord = reversed;
+            if (binarySearch(words, numWords, testWord)) {
+                resultSemordnilaps = realloc(resultSemordnilaps, (SemordnilapCount + 1) * sizeof(char *));
+                if (resultSemordnilaps == NULL) {
+                    perror("Memory allocation failed");
+                    return 1;
+                }
+
+                resultSemordnilaps[SemordnilapCount] = malloc(strlen(words[i]) + 1);
+                if (resultSemordnilaps[SemordnilapCount] == NULL) {
+                    perror("Memory allocation failed");
+                    return 1;
+                }
+                strcpy(resultSemordnilaps[SemordnilapCount], words[i]);
+                SemordnilapCount++;
             }
-            strcpy(resultStrings[palindromeCount], words[i]);
-            palindromeCount++;
         }
     }
 
     printf("Total number of words: %d\n", numWords);
     printf("Found %d palindrome(s):\n", palindromeCount);
     for (int i = 0; i < palindromeCount; i++) {
-        printf("%s\n", resultStrings[i]);
-        free(resultStrings[i]); // Free each palindrome string
+        printf("%s\n", resultPalindromes[i]);
+        free(resultPalindromes[i]); // Free each palindrome string
     }
-    free(resultStrings); // Free the array of pointers
+    free(resultPalindromes); // Free the array of pointers
 
-     
+    printf("Found %d Semordnilap(s):\n", SemordnilapCount);
+    for (int i = 0; i < SemordnilapCount; i++) {
+        printf("%s\n", resultSemordnilaps[i]);
+        free(resultSemordnilaps[i]); // Free each Semordnilap string
+    }
+    free(resultSemordnilaps); // Free the array of pointers
 
     // Free memory allocated for words
     for (int i = 0; i < numWords; i++) {
