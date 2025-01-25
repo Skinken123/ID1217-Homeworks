@@ -24,6 +24,7 @@ int numbers[2][3] = {
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #define MAX_WORD_LENGTH 22 // Maximum length of a word
 #define TOTAL_WORDS 25143   // Total number of words
@@ -65,7 +66,7 @@ int readWordsFromFile(const char *filename, char ***words, int maxWords) {
     }
 
     fclose(file);
-    return count; // Return the number of words read
+    return 0; // Return the number of words read
 }
 
 /* Checks if a word is a palindrome */
@@ -84,9 +85,9 @@ bool isPalindrome(const char *str) {
 }
 
 /* Binary Searches for word */
-bool binarySearch(char **words, int numWords, const char *target) {
+bool binarySearch(char **words, const char *target) {
     int left = 0;
-    int right = numWords - 1;
+    int right = TOTAL_WORDS - 1;
 
     while (left <= right) {
         int mid = left + (right - left) / 2;
@@ -122,18 +123,17 @@ int main() {
     char **words = NULL; // Array of words
     char **resultPalindromes = NULL; // Dynamic array for palindromes
     char **resultSemordnilaps = NULL; // Dynamic array for Semordnilaps
-    int numWords;
     char reversed[MAX_WORD_LENGTH];
 
     
-    numWords = readWordsFromFile("words", &words, TOTAL_WORDS); // Call the function to read words
-    if (numWords == -1) {
+      // Call the function to read words
+    if (readWordsFromFile("words", &words, TOTAL_WORDS)) {
         fprintf(stderr, "Failed to read words from file.\n");
         return 1;
     }
 
     int palindromeCount = 0;
-    for (int i = 0; i < numWords; i++) { // First loop for palindromes
+    for (int i = 0; i < TOTAL_WORDS; i++) { // First loop for palindromes
         if (isPalindrome(words[i])) {
             resultPalindromes = realloc(resultPalindromes, (palindromeCount + 1) * sizeof(char *));
             if (resultPalindromes == NULL) {
@@ -152,7 +152,7 @@ int main() {
     }
 
     int SemordnilapCount = 0;
-    for (int i = 0; i < numWords; i++) { // Second loop for Semordnilaps, only if not a palindrome
+    for (int i = 0; i < TOTAL_WORDS; i++) { // Second loop for Semordnilaps, only if not a palindrome
         bool isAlreadyPalindrome = false; // Skip the word if it's already a palindrome
         for (int j = 0; j < palindromeCount; j++) {
             if (strcmp(words[i], resultPalindromes[j]) == 0) {
@@ -165,7 +165,7 @@ int main() {
             strcpy(reversed, words[i]);
             reverseString(reversed);
             const char *testWord = reversed;
-            if (binarySearch(words, numWords, testWord)) {
+            if (binarySearch(words, testWord)) {
                 resultSemordnilaps = realloc(resultSemordnilaps, (SemordnilapCount + 1) * sizeof(char *));
                 if (resultSemordnilaps == NULL) {
                     perror("Memory allocation failed");
@@ -183,7 +183,7 @@ int main() {
         }
     }
 
-    printf("Total number of words: %d\n", numWords);
+    printf("Total number of words: %d\n", TOTAL_WORDS);
     printf("Found %d palindrome(s):\n", palindromeCount);
     for (int i = 0; i < palindromeCount; i++) {
         printf("%s\n", resultPalindromes[i]);
@@ -199,7 +199,7 @@ int main() {
     free(resultSemordnilaps); // Free the array of pointers
 
     // Free memory allocated for words
-    for (int i = 0; i < numWords; i++) {
+    for (int i = 0; i < TOTAL_WORDS; i++) {
         free(words[i]);
     }
     free(words);
