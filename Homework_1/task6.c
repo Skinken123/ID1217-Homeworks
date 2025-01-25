@@ -180,6 +180,7 @@ bool binarySearch(char **words, const char *target) {
     return false; 
 }
 
+/* Prints the output of the program with a nice format */
 void printResults(double start_time, double end_time, int numWorkers, int sums[][2]) {
     // Print the header
     for (int i = 0; i < BOX_WIDTH; i++) printf("=");

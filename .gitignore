@@ -3,3 +3,6 @@
 
 # Ignore .vscode folder
 .vscode/
+
+# Ignore results file
+results.txt
