@@ -83,10 +83,44 @@ bool isPalindrome(const char *str) {
     return true;
 }
 
+bool binarySearch(char **words, int numWords, const char *target) {
+    int left = 0;
+    int right = numWords - 1;
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        int cmp = strcasecmp(words[mid], target);
+
+        if (cmp == 0) {
+            return true; 
+        } else if (cmp < 0) {
+            left = mid + 1; 
+        } else {
+            right = mid - 1; 
+        }
+    }
+    return false; 
+}
+
+void reverseString(char *str) {
+    int start = 0;
+    int end = strlen(str) - 1;
+
+    while (start < end) {
+        char temp = str[start];
+        str[start] = str[end];
+        str[end] = temp;
+
+        start++;
+        end--;
+    }
+}
+
 int main() {
     char **words = NULL; // Array of words
     char **resultStrings = NULL; // Dynamic array for palindromes
     int numWords;
+    char str[] = "hello"; //temporary word to reverse
 
     // Call the function to read words
     numWords = readWordsFromFile("words", &words, TOTAL_WORDS);
@@ -94,6 +128,20 @@ int main() {
         fprintf(stderr, "Failed to read words from file.\n");
         return 1;
     }
+
+
+    int SemordnilapCount = 0;
+    const char *testWord = "sussy"; // Replace with the word you want to check
+    if (binarySearch(words, numWords, testWord)) {
+        printf("The word '%s' is present in the array.\n", testWord);
+        SemordnilapCount++;
+    } else {
+        printf("The word '%s' is NOT present in the array.\n", testWord);
+    }
+
+    // reverse word function call
+    reverseString(str);
+    printf("reversed string: %s\n", str);
 
     int palindromeCount = 0;
     for (int i = 0; i < numWords; i++) {
@@ -121,6 +169,8 @@ int main() {
         free(resultStrings[i]); // Free each palindrome string
     }
     free(resultStrings); // Free the array of pointers
+
+     
 
     // Free memory allocated for words
     for (int i = 0; i < numWords; i++) {
