@@ -124,7 +124,7 @@ void calculateWorkLoad(int (*array)[2] , int numberOfWorkers, int columns) {
         for (int j = 0; j < columns; j++) {
             array[i][j] = arrayIndex; 
             if (j == 0) arrayIndex = arrayIndex + workSlice;
-            if (i == (numberOfWorkers-1) && j == 0) arrayIndex = arrayIndex + remainder + 1;
+            if (i == (numberOfWorkers-1) && j == 0) arrayIndex = arrayIndex + remainder;
         }
     }
 }
@@ -185,7 +185,6 @@ void *Worker(void *arg) {
   int startIndex = data->startIndex;
   int endIndex = data->endIndex;
   int threadId = data->threadId;
-  printf("Hi Im thread: %d\n", threadId);
 
   // Analyze the array in the search index range and find all palindromes and semordnilaps
   // Store palindromes and semordnilaps in seperete arrays accessed by a pointer in a global array
@@ -208,28 +207,15 @@ void *Worker(void *arg) {
         }
         strcpy(resultPalindromes[palindromeCount], words[i]);
         palindromeCount++;
-        printf("Found %d palindrome(s):\n", palindromeCount);
         // Unlock
         pthread_mutex_unlock(&palindrome);
         sums[threadId][0]++;
       }
   }
-  printf("Before Barrier, thread: %d\n", threadId);
-  Barrier();
-  printf("After Barrier, thread: %d\n", threadId);
-  if (threadId == 0){
-    printf("Test\n");
-    printf("Total number of words: %d\n", TOTAL_WORDS);
-    printf("Found %d palindrome(s):\n", palindromeCount);
-    for (int i = 0; i < palindromeCount; i++) {
-        printf("%s\n", resultPalindromes[i]);
-        free(resultPalindromes[i]); // Free each palindrome string
-    }
-    free(resultPalindromes); // Free the array of pointers
-  }
   // Use the barrier to enable one of the workers to write the semordnilaps and palindromes to a result text file
   // This worker will also print the total number of words found as well as how many each thread found
   // End timer
+  return NULL;
 }
 
 /*
