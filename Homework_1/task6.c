@@ -32,7 +32,7 @@ pthread_cond_t go;        /* condition variable for leaving */
 int numWorkers = 0;           /* number of workers */ 
 int numArrived = 0;       /* number who have arrived to the barrier*/
 int palindromeCount = 0;
-int semordnilapsCount = 0;
+int semordnilapCount = 0;
 
 double start_time, end_time; /* start and end times of parallel execution*/
 
@@ -179,6 +179,28 @@ bool binarySearch(char **words, const char *target) {
     return false; 
 }
 
+/* Function to write results to a file */
+void writeResultsToFile(const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        perror("Error opening file for writing");
+        return;
+    }
+
+    // Write Palindromes
+    fprintf(file, "==================== Palindromes ====================\n");
+    for (int i = 0; i < palindromeCount; i++) {
+        fprintf(file, "%s\n", resultPalindromes[i]);
+    }
+
+    fprintf(file, "\n==================== Semordnilaps ====================\n");
+    for (int i = 0; i < semordnilapCount; i++) {
+        fprintf(file, "%s\n", resultSemordnilaps[i]);
+    }
+  
+  fclose(file);
+}
+
 /* Method each worker/thread excecutes */
 void *Worker(void *arg) {
   ThreadData *data = (ThreadData *) arg;
@@ -189,8 +211,10 @@ void *Worker(void *arg) {
   // Analyze the array in the search index range and find all palindromes and semordnilaps
   // Store palindromes and semordnilaps in seperete arrays accessed by a pointer in a global array
   // and increment the count inside the global variable array
+  char reversed[MAX_WORD_LENGTH];
   sums[threadId][0] = 0;
-  for (int i = startIndex; i < endIndex; i++) { // First loop for palindromes
+  sums[threadId][1] = 0;
+  for (int i = startIndex; i < endIndex; i++) { 
       if (isPalindrome(words[i])) {
         // Lock
         pthread_mutex_lock(&palindrome);
@@ -211,6 +235,88 @@ void *Worker(void *arg) {
         pthread_mutex_unlock(&palindrome);
         sums[threadId][0]++;
       }
+      else {
+        strcpy(reversed, words[i]);
+        reverseString(reversed);
+        const char *testWord = reversed;
+        if (binarySearch(words, testWord)) {
+          // Lock
+          pthread_mutex_lock(&semordnilaps);
+          resultSemordnilaps = realloc(resultSemordnilaps, (semordnilapCount + 1) * sizeof(char *));
+            if (resultSemordnilaps == NULL) {
+              perror("Memory allocation failed");
+              return NULL;
+            }
+
+          resultSemordnilaps[semordnilapCount] = malloc(strlen(words[i]) + 1);
+            if (resultSemordnilaps[semordnilapCount] == NULL) {
+              perror("Memory allocation failed");
+              return NULL;
+            }
+            strcpy(resultSemordnilaps[semordnilapCount], words[i]);
+            semordnilapCount++;
+            // Unlock
+            pthread_mutex_unlock(&semordnilaps);
+            sums[threadId][1]++;
+        }
+      }
+  }
+
+  Barrier();
+  end_time = read_timer();
+  if (threadId == 0) {
+  const int BOX_WIDTH = 55;
+  writeResultsToFile("results.txt");
+
+  // Print the header
+  for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n| %-*s %-*s |\n", 40, "Word Analysis Results", BOX_WIDTH - 40 - 5, "");
+  for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n");
+
+  // Total words
+  printf("| %-40s %10d |\n", "Total number of words:", TOTAL_WORDS);
+  for (int i = 0; i < BOX_WIDTH; i++) printf("-");
+    printf("\n");
+
+  // Palindrome count
+  printf("| %-40s %10d |\n", "Palindrome(s) found:", palindromeCount);
+  for (int i = 0; i < BOX_WIDTH; i++) printf("-");
+    printf("\n");
+
+  // Semordnilap count
+  printf("| %-40s %10d |\n", "Semordnilap(s) found:", semordnilapCount);
+  for (int i = 0; i < BOX_WIDTH; i++) printf("-");
+    printf("\n");
+
+  // Execution time 
+  printf("| %-38s %g sec |\n", "Program execution time:", end_time - start_time);
+  for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n");
+
+  // Worker results
+  for (int i = 0; i < numWorkers; i++) {
+      printf("| Worker %-2d Found %3d Palindromes & %3d Semordnilaps %-1s|\n",
+            i, sums[i][0], sums[i][1]);
+      for (int i = 0; i < BOX_WIDTH; i++) printf("-");
+        printf("\n");
+  }
+
+  // Footer
+  for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n");
+
+
+    
+    // Free memory allocated for words
+    free(resultSemordnilaps); // Free the array of pointers
+    free(resultPalindromes); // Free the array of pointers
+    for (int i = 0; i < TOTAL_WORDS; i++) {
+        free(words[i]);
+    }
+    free(words);
+
+    
   }
   // Use the barrier to enable one of the workers to write the semordnilaps and palindromes to a result text file
   // This worker will also print the total number of words found as well as how many each thread found
