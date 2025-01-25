@@ -5,4 +5,4 @@
 .vscode/
 
 # Ignore results file
-results.txt
+*.txt
