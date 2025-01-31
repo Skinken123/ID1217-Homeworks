@@ -26,8 +26,7 @@
 #define MAXWORKERS 10   /* maximum number of workers */
 
 pthread_mutex_t barrier;  /* mutex lock for the barrier */
-pthread_mutex_t palindrome; /* mutex lock for accessing palindrome array */
-pthread_mutex_t semordnilaps; /* mutex lock for accessing semordnilaps array*/
+pthread_mutex_t writeToGlobal; /* mutex lock for accessing global palindrome and semordnilaps array */
 pthread_cond_t go;        /* condition variable for leaving */
 int numWorkers = 0;           /* number of workers */ 
 int numArrived = 0;       /* number who have arrived to the barrier*/
@@ -119,13 +118,13 @@ int readWordsFromFile(const char *filename, char ***words, int maxWords) {
 void calculateWorkLoad(int (*array)[2] , int numberOfWorkers, int columns) {
   int workSlice = TOTAL_WORDS/numberOfWorkers;
   int remainder = TOTAL_WORDS - (workSlice*numberOfWorkers);
-  int arrayIndex = 0;
+  int palIndex = 0;
 
   for (int i = 0; i < numberOfWorkers; i++) {
         for (int j = 0; j < columns; j++) {
-            array[i][j] = arrayIndex; 
-            if (j == 0) arrayIndex = arrayIndex + workSlice;
-            if (i == (numberOfWorkers-1) && j == 0) arrayIndex = arrayIndex + remainder;
+            array[i][j] = palIndex; 
+            if (j == 0) palIndex = palIndex + workSlice;
+            if (i == (numberOfWorkers-1) && j == 0) palIndex = palIndex + remainder;
         }
     }
 }
@@ -249,6 +248,10 @@ void *Worker(void *arg) {
   int startIndex = data->startIndex;
   int endIndex = data->endIndex;
   int threadId = data->threadId;
+  char **localPalindromes;
+  char **localSemornilaps;
+  int palIndex = 0;
+  int semIndex = 0;
 
   // Analyze the array in the search index range and find all palindromes and semordnilaps
   // Store palindromes and semordnilaps in seperete arrays accessed by a pointer in a global array
@@ -258,23 +261,19 @@ void *Worker(void *arg) {
   sums[threadId][1] = 0;
   for (int i = startIndex; i < endIndex; i++) { 
       if (isPalindrome(words[i])) {
-        // Lock
-        pthread_mutex_lock(&palindrome);
-        resultPalindromes = realloc(resultPalindromes, (palindromeCount + 1) * sizeof(char *));
-        if (resultPalindromes == NULL) {
-            perror("Memory allocation failed");
+        localPalindromes = realloc(localPalindromes, (palIndex + 1) * sizeof(char *));
+        if (localPalindromes == NULL) {
+            perror("Memory allocation failed 1");
             return NULL;
         }
 
-        resultPalindromes[palindromeCount] = malloc(strlen(words[i]) + 1);
-        if (resultPalindromes[palindromeCount] == NULL) {
-            perror("Memory allocation failed");
+        localPalindromes[palIndex] = malloc(strlen(words[i]) + 1);
+        if (localPalindromes[palIndex] == NULL) {
+            perror("Memory allocation failed 2");
             return NULL;
         }
-        strcpy(resultPalindromes[palindromeCount], words[i]);
-        palindromeCount++;
-        // Unlock
-        pthread_mutex_unlock(&palindrome);
+        strcpy(localPalindromes[palIndex], words[i]);
+        palIndex++;
         sums[threadId][0]++;
       }
       else {
@@ -282,27 +281,61 @@ void *Worker(void *arg) {
         reverseString(reversed);
         const char *testWord = reversed;
         if (binarySearch(words, testWord)) {
-          // Lock
-          pthread_mutex_lock(&semordnilaps);
-          resultSemordnilaps = realloc(resultSemordnilaps, (semordnilapCount + 1) * sizeof(char *));
-            if (resultSemordnilaps == NULL) {
-              perror("Memory allocation failed");
-              return NULL;
-            }
+          localSemornilaps = realloc(localSemornilaps, (semIndex + 1) * sizeof(char *));
+          if (localSemornilaps == NULL) {
+            perror("Memory allocation failed 3\n");
+            return NULL;
+          }
 
-          resultSemordnilaps[semordnilapCount] = malloc(strlen(words[i]) + 1);
-            if (resultSemordnilaps[semordnilapCount] == NULL) {
-              perror("Memory allocation failed");
-              return NULL;
-            }
-            strcpy(resultSemordnilaps[semordnilapCount], words[i]);
-            semordnilapCount++;
-            // Unlock
-            pthread_mutex_unlock(&semordnilaps);
-            sums[threadId][1]++;
+          localSemornilaps[semIndex] = malloc(strlen(words[i]) + 1);
+          if (localSemornilaps[semIndex] == NULL) {
+            perror("Memory allocation failed 4");
+            return NULL;
+          }
+          strcpy(localSemornilaps[semIndex], words[i]);
+          semIndex++;
+          sums[threadId][1]++;
         }
     }
   }
+
+  //Each Worker writes to global array with semornilaps and palindromes
+  pthread_mutex_lock(&writeToGlobal);
+  //Palindromes
+  int transferIndex = palindromeCount;
+  palindromeCount = palindromeCount + palIndex;
+  resultPalindromes = realloc(resultPalindromes, (palindromeCount + 1) * sizeof(char *));
+  if (resultPalindromes == NULL){
+    perror("Memory allocation failed 5");
+    return NULL;
+  }
+  for (int i = 0; i < palIndex; i++){
+    resultPalindromes[transferIndex] = malloc(strlen(localPalindromes[i]) + 1);
+    if (resultPalindromes[transferIndex] == NULL){
+      perror("Memory allocation failed 6");
+      return NULL;
+    }
+    strcpy(resultPalindromes[transferIndex], localPalindromes[i]);
+    transferIndex++;
+  }
+  //Semordnilaps
+  transferIndex = semordnilapCount;
+  semordnilapCount = semordnilapCount + semIndex;
+  resultSemordnilaps = realloc(resultSemordnilaps, (semordnilapCount + 1) * sizeof(char *));
+  if (resultSemordnilaps == NULL){
+    perror("Memory allocation failed 7");
+    return NULL;
+  }
+  for (int i = 0; i < semIndex; i++){
+    resultSemordnilaps[transferIndex] = malloc(strlen(localSemornilaps[i]) + 1);
+    if (resultSemordnilaps[transferIndex] == NULL){
+      perror("Memory allocation failed 8");
+      return NULL;
+    }
+    strcpy(resultSemordnilaps[transferIndex], localSemornilaps[i]);
+    transferIndex++;
+  }
+  pthread_mutex_unlock(&writeToGlobal);
 
   // Use the barrier to enable one of the workers to write the semordnilaps and palindromes to a result text file
   // This worker will also print the total number of words found as well as how many each thread found
@@ -342,8 +375,7 @@ int main(int argc, char *argv[]) {
   /* initialize mutex and condition variable */
   pthread_mutex_init(&barrier, NULL);
   pthread_cond_init(&go, NULL);
-  pthread_mutex_init(&palindrome, NULL);
-  pthread_mutex_init(&semordnilaps, NULL);
+  pthread_mutex_init(&writeToGlobal, NULL);
 
   /* read command line args if any */
   numWorkers = (argc > 1)? atoi(argv[1]) : MAXWORKERS;
