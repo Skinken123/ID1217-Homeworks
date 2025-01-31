@@ -181,7 +181,7 @@ bool binarySearch(char **words, const char *target) {
 }
 
 /* Prints the output of the program with a nice format */
-void printResults(double start_time, double end_time, int numWorkers, int sums[][2]) {
+void printResults(double start_time, double end_time, int numWorkers) {
     // Print the header
     for (int i = 0; i < BOX_WIDTH; i++) printf("=");
     printf("\n| %-*s %-*s |\n", 40, "Word Analysis Results", BOX_WIDTH - 40 - 5, "");
@@ -204,7 +204,7 @@ void printResults(double start_time, double end_time, int numWorkers, int sums[]
     printf("\n");
 
     // Execution time 
-    printf("| %-38s %.6f sec |\n", "Program execution time:", end_time - start_time);
+    printf("| %-36s %.8f sec |\n", "Program execution time:", end_time - start_time);
     for (int i = 0; i < BOX_WIDTH; i++) printf("=");
     printf("\n");
 
@@ -301,14 +301,16 @@ void *Worker(void *arg) {
             pthread_mutex_unlock(&semordnilaps);
             sums[threadId][1]++;
         }
-      }
+    }
   }
 
+  // Use the barrier to enable one of the workers to write the semordnilaps and palindromes to a result text file
+  // This worker will also print the total number of words found as well as how many each thread found
   Barrier();
-  end_time = read_timer();
   if (threadId == 0) {
+  end_time = read_timer();
   writeResultsToFile("results.txt");
-  printResults(start_time, end_time, numWorkers, sums);
+  printResults(start_time, end_time, numWorkers);
       
   // Free memory allocated for words
   free(resultSemordnilaps); // Free the array of pointers
@@ -319,9 +321,6 @@ void *Worker(void *arg) {
   free(words);
 
   }
-  // Use the barrier to enable one of the workers to write the semordnilaps and palindromes to a result text file
-  // This worker will also print the total number of words found as well as how many each thread found
-  // End timer
   return NULL;
 }
 
@@ -343,6 +342,8 @@ int main(int argc, char *argv[]) {
   /* initialize mutex and condition variable */
   pthread_mutex_init(&barrier, NULL);
   pthread_cond_init(&go, NULL);
+  pthread_mutex_init(&palindrome, NULL);
+  pthread_mutex_init(&semordnilaps, NULL);
 
   /* read command line args if any */
   numWorkers = (argc > 1)? atoi(argv[1]) : MAXWORKERS;
