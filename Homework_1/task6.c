@@ -49,18 +49,6 @@ typedef struct {
   int threadId;
 } ThreadData;
 
-/* a reusable counter barrier to make sure all workers/threads has analyzed its section of the dictionary*/
-void Barrier() {
-  pthread_mutex_lock(&barrier);
-  numArrived++;
-  if (numArrived == numWorkers) {
-    numArrived = 0;
-    pthread_cond_broadcast(&go);
-  } else
-    pthread_cond_wait(&go, &barrier);
-  pthread_mutex_unlock(&barrier);
-}
-
 /* timer */
 double read_timer() {
     static bool initialized = false;
@@ -340,8 +328,8 @@ void *Worker(void *arg) {
 
   // Use the barrier to enable one of the workers to write the semordnilaps and palindromes to a result text file
   // This worker will also print the total number of words found as well as how many each thread found
-  //Barrier();
   pthread_barrier_wait(&barrierTest);
+
   if (threadId == 0) {
   end_time = read_timer();
   writeResultsToFile("results.txt");
@@ -408,5 +396,4 @@ int main(int argc, char *argv[]) {
     pthread_create(&workerid[l], &attr, Worker, &dataArray[l]);
   pthread_exit(NULL);
 }
-
 //End of document
