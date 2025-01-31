@@ -248,8 +248,8 @@ void *Worker(void *arg) {
   int startIndex = data->startIndex;
   int endIndex = data->endIndex;
   int threadId = data->threadId;
-  char **localPalindromes;
-  char **localSemornilaps;
+  char **localPalindromes = NULL;
+  char **localSemornilaps = NULL;
   int palIndex = 0;
   int semIndex = 0;
 
