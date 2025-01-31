@@ -28,6 +28,7 @@
 pthread_mutex_t barrier;  /* mutex lock for the barrier */
 pthread_mutex_t writeToGlobal; /* mutex lock for accessing global palindrome and semordnilaps array */
 pthread_cond_t go;        /* condition variable for leaving */
+pthread_barrier_t barrierTest;
 int numWorkers = 0;           /* number of workers */ 
 int numArrived = 0;       /* number who have arrived to the barrier*/
 int palindromeCount = 0;
@@ -339,7 +340,8 @@ void *Worker(void *arg) {
 
   // Use the barrier to enable one of the workers to write the semordnilaps and palindromes to a result text file
   // This worker will also print the total number of words found as well as how many each thread found
-  Barrier();
+  //Barrier();
+  pthread_barrier_wait(&barrierTest);
   if (threadId == 0) {
   end_time = read_timer();
   writeResultsToFile("results.txt");
@@ -380,6 +382,8 @@ int main(int argc, char *argv[]) {
   /* read command line args if any */
   numWorkers = (argc > 1)? atoi(argv[1]) : MAXWORKERS;
   if (numWorkers > MAXWORKERS) numWorkers = MAXWORKERS;
+
+  pthread_barrier_init(&barrierTest, NULL, numWorkers);
 
   /* parse dictionary file into global variable array*/
   if (readWordsFromFile("words", &words, TOTAL_WORDS)) {
