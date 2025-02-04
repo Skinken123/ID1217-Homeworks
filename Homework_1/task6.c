@@ -23,7 +23,7 @@
 #include <sys/time.h>
 #define TOTAL_WORDS 25143  /* maximum dictionary words from file*/
 #define MAX_WORD_LENGTH 22  /* max byte length of words in file */
-#define MAXWORKERS 10   /* maximum number of workers */
+#define MAXWORKERS 16   /* maximum number of workers */
 
 pthread_mutex_t barrier;  /* mutex lock for the barrier */
 pthread_mutex_t writeToGlobal; /* mutex lock for accessing global palindrome and semordnilaps array */
