@@ -44,5 +44,38 @@ int main(int argc, char *argv[]) {
         return 1;
   }
 
+  #pragma omp parallel num_threads(numWorkers) 
+  {
+    int localPalindromeCount = 0, localSemordnilapCount = 0;
+    char **localPalindromes = NULL, **localSemordnilaps = NULL;
+    int palIndex = 0, semIndex = 0;
+    char reversed[MAX_WORD_LENGTH];
+
+    #pragma omp for schedule(static)
+      for (int i = 0; i < TOTAL_WORDS; i++) {
+        if (isPalindrome(words[i])) {
+          localPalindromes = realloc(localPalindromes, (palIndex + 1) * sizeof(char *));
+          localPalindromes[palIndex] = strdup(words[i]);
+          palIndex++;
+          localPalindromeCount++;
+        } else {
+            strcpy(reversed, words[i]);
+            reverseString(reversed);
+            const char *reversedWord = reversed;
+            if(binarySearch(words, reversedWord)) {
+              localSemordnilaps = realloc(localSemordnilaps, (semIndex + 1) * sizeof(char *));
+              localSemordnilaps[semIndex] = strdup(words[i]);
+              semIndex++;
+              localSemordnilapCount++;
+            }
+        }
+      }
+
+    #pragma omp critical 
+    {
+      palindromeCount += localPalindromeCount;
+      semordnilapCount += localSemordnilapCount;
+    }
+  }
 }
 //End of document
