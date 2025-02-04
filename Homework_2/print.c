@@ -71,8 +71,26 @@ void writeResultsToFile(const char *filename, int palindromeCount, int semordnil
 }
 
 void printSpeedUp(double (*programTime)[2], int argc) {
-    printf("Index\tExecution Time\tThreads\n");
+    // Print the header
+    printf("\n");
+    for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n| %-*s %-*s |\n", 40, "Speedup Analysis", BOX_WIDTH - 40 - 5, "");
+    for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n");
+
+    // Table header
+    printf("| %-6s %-20s %-10s %-10s   |\n", "Index", "Execution Time", "Threads", "Speedup");
+    for (int i = 0; i < BOX_WIDTH; i++) printf("-");
+    printf("\n");
+
+    // Table rows
     for (int i = 0; i < argc; i++) {
-        printf("%d\t%.8f\t\t%.0f\t%.2f\n", i + 1, programTime[i][0], programTime[i][1], programTime[0][0] / programTime[i][0]);
+        printf("| %3d %15.8f %12.0f %11.2f        |\n", i + 1, programTime[i][0], programTime[i][1], programTime[0][0] / programTime[i][0]);
+        for (int j = 0; j < BOX_WIDTH; j++) printf("-");
+        printf("\n");
     }
+
+    // Footer
+    for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n");
 }
