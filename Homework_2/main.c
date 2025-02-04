@@ -32,23 +32,10 @@ int sums[MAXWORKERS][2]; /* partial sums, how many palindromes/semordnilaps each
 char **resultPalindromes = NULL; // Dynamic array for palindromes
 char **resultSemordnilaps = NULL; // Dynamic array for Semordnilaps
 char **words = NULL; // Array of words
+double programTime[16][2];
 
 void worker(){
-
-}
-
-int main(int argc, char *argv[]) {
-  /* read command line args if any */
-  numWorkers = (argc > 1)? atoi(argv[1]) : MAXWORKERS;
-  if (numWorkers > MAXWORKERS) numWorkers = MAXWORKERS;
-
-  /* parse dictionary file into global variable array*/
-  if (readWordsFromFile("words", &words, TOTAL_WORDS, MAX_WORD_LENGTH)) {
-        fprintf(stderr, "Failed to read words from file.\n");
-        return 1;
-  }
-  start_time = omp_get_wtime();
-  #pragma omp parallel num_threads(numWorkers) 
+ #pragma omp parallel num_threads(numWorkers) 
   {
     char **localPalindromes = NULL, **localSemordnilaps = NULL;
     int palIndex = 0, semIndex = 0;
@@ -97,8 +84,48 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  end_time = omp_get_wtime(); 
-  writeResultsToFile("results.txt", palindromeCount, semordnilapCount, resultPalindromes, resultSemordnilaps);
-  printResults(start_time, end_time, numWorkers, TOTAL_WORDS, palindromeCount, semordnilapCount, sums);
+}
+
+int main(int argc, char *argv[]) {
+
+  /* parse dictionary file into global variable array*/
+  if (readWordsFromFile("words", &words, TOTAL_WORDS, MAX_WORD_LENGTH)) {
+        fprintf(stderr, "Failed to read words from file.\n");
+        return 1;
+  }
+
+  for (int argIndex = 1; argIndex < argc; argIndex++) {
+    numWorkers = atoi(argv[argIndex]);
+    if (numWorkers > MAXWORKERS) numWorkers = MAXWORKERS;
+    if (numWorkers < 1) {
+        fprintf(stderr, "Invalid numWorkers value: %d\n", numWorkers);
+        continue;  // Skip invalid values
+    }
+
+    printf("\nRunning with %d workers...\n", numWorkers);
+
+    double totalExecutionTime = 0;
+
+    for(int i = 0; i < 5; i++) {
+      palindromeCount = 0;
+      semordnilapCount = 0;
+      start_time = omp_get_wtime();
+      worker();
+      end_time = omp_get_wtime();
+
+      totalExecutionTime += (end_time - start_time);
+    }
+
+    double avgExecutionTime = totalExecutionTime / 5;
+
+    programTime[argIndex-1][0] = avgExecutionTime;
+    programTime[argIndex-1][1] = atoi(argv[argIndex]); 
+
+    writeResultsToFile("results.txt", palindromeCount, semordnilapCount, resultPalindromes, resultSemordnilaps);
+    printResults(avgExecutionTime, numWorkers, TOTAL_WORDS, palindromeCount, semordnilapCount, sums);
+  }
+
+  printSpeedUp(programTime, argc-1);
+  return 0;
 }
 //End of document

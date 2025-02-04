@@ -8,7 +8,7 @@
 const int BOX_WIDTH = 55;
 
 /* Prints the output of the program with a nice format */
-void printResults(double start_time, double end_time, int numWorkers, int totalWords, int palindromeCount, int semordnilapCount, int (*sums)[2]) {
+void printResults(double avgExecutionTime, int numWorkers, int totalWords, int palindromeCount, int semordnilapCount, int (*sums)[2]) {
     // Print the header
     for (int i = 0; i < BOX_WIDTH; i++) printf("=");
     printf("\n| %-*s %-*s |\n", 40, "Word Analysis Results", BOX_WIDTH - 40 - 5, "");
@@ -31,7 +31,7 @@ void printResults(double start_time, double end_time, int numWorkers, int totalW
     printf("\n");
 
     // Execution time 
-    printf("| %-36s %.8f sec |\n", "Program execution time:", end_time - start_time);
+    printf("| %-36s %.8f sec |\n", "Program AVG execution time:", avgExecutionTime);
     for (int i = 0; i < BOX_WIDTH; i++) printf("=");
     printf("\n");
 
@@ -68,4 +68,11 @@ void writeResultsToFile(const char *filename, int palindromeCount, int semordnil
     }
   
   fclose(file);
+}
+
+void printSpeedUp(double (*programTime)[2], int argc) {
+    printf("Index\tExecution Time\tThreads\n");
+    for (int i = 0; i < argc; i++) {
+        printf("%d\t%.6f\t\t%.0f\t%.2f\n", i + 1, programTime[i][0], programTime[i][1], programTime[0][0] / programTime[i][0]);
+    }
 }
