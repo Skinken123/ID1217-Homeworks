@@ -16,6 +16,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include "functions.h"
+#include "print.h"
 #define TOTAL_WORDS 25143  /* maximum dictionary words from file*/
 #define MAX_WORD_LENGTH 22  /* max byte length of words in file */
 #define MAXWORKERS 16   /* maximum number of workers */
@@ -43,13 +45,13 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Failed to read words from file.\n");
         return 1;
   }
-
+  start_time = omp_get_wtime();
   #pragma omp parallel num_threads(numWorkers) 
   {
     char **localPalindromes = NULL, **localSemordnilaps = NULL;
     int palIndex = 0, semIndex = 0;
     char reversed[MAX_WORD_LENGTH];
-    int threadId = 0;
+    int threadId = omp_get_thread_num();
     sums[threadId][0] = 0;
     sums[threadId][1] = 0;
 
@@ -93,8 +95,8 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-
+  end_time = omp_get_wtime(); 
   writeResultsToFile("results.txt", palindromeCount, semordnilapCount, resultPalindromes, resultSemordnilaps);
-  printResults(10.0, 12.0, numWorkers, TOTAL_WORDS, palindromeCount, semordnilapCount, sums);
+  printResults(start_time, end_time, numWorkers, TOTAL_WORDS, palindromeCount, semordnilapCount, sums);
 }
 //End of document

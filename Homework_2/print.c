@@ -49,7 +49,7 @@ void printResults(double start_time, double end_time, int numWorkers, int totalW
 }
 
 /* Function to write results to a file */
-void writeResultsToFile(const char *filename, int palindromeCount, int semordnilapCount, int (*resultPalindromes), int (*resultSemordnilaps)) {
+void writeResultsToFile(const char *filename, int palindromeCount, int semordnilapCount, char **resultPalindromes, char **resultSemordnilaps) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         perror("Error opening file for writing");
