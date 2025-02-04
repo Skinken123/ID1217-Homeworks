@@ -8,7 +8,7 @@
 const int BOX_WIDTH = 55;
 
 /* Prints the output of the program with a nice format */
-void printResults(double start_time, double end_time, int numWorkers, int totalWords, int palindromeCount, int semordnilapCount) {
+void printResults(double start_time, double end_time, int numWorkers, int totalWords, int palindromeCount, int semordnilapCount, int (*sums)[2]) {
     // Print the header
     for (int i = 0; i < BOX_WIDTH; i++) printf("=");
     printf("\n| %-*s %-*s |\n", 40, "Word Analysis Results", BOX_WIDTH - 40 - 5, "");
@@ -49,7 +49,7 @@ void printResults(double start_time, double end_time, int numWorkers, int totalW
 }
 
 /* Function to write results to a file */
-void writeResultsToFile(const char *filename, int palindromeCount, int semordnilapCount) {
+void writeResultsToFile(const char *filename, int palindromeCount, int semordnilapCount, int (*resultPalindromes), int (*resultSemordnilaps)) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         perror("Error opening file for writing");

@@ -39,17 +39,19 @@ int main(int argc, char *argv[]) {
   if (numWorkers > MAXWORKERS) numWorkers = MAXWORKERS;
 
   /* parse dictionary file into global variable array*/
-  if (readWordsFromFile("words", &words, TOTAL_WORDS)) {
+  if (readWordsFromFile("words", &words, TOTAL_WORDS, MAX_WORD_LENGTH)) {
         fprintf(stderr, "Failed to read words from file.\n");
         return 1;
   }
 
   #pragma omp parallel num_threads(numWorkers) 
   {
-    int localPalindromeCount = 0, localSemordnilapCount = 0;
     char **localPalindromes = NULL, **localSemordnilaps = NULL;
     int palIndex = 0, semIndex = 0;
     char reversed[MAX_WORD_LENGTH];
+    int threadId = 0;
+    sums[threadId][0] = 0;
+    sums[threadId][1] = 0;
 
     #pragma omp for schedule(static)
       for (int i = 0; i < TOTAL_WORDS; i++) {
@@ -57,25 +59,42 @@ int main(int argc, char *argv[]) {
           localPalindromes = realloc(localPalindromes, (palIndex + 1) * sizeof(char *));
           localPalindromes[palIndex] = strdup(words[i]);
           palIndex++;
-          localPalindromeCount++;
+          sums[threadId][0]++;
         } else {
             strcpy(reversed, words[i]);
             reverseString(reversed);
             const char *reversedWord = reversed;
-            if(binarySearch(words, reversedWord)) {
+            if(binarySearch(words, reversedWord, TOTAL_WORDS)) {
               localSemordnilaps = realloc(localSemordnilaps, (semIndex + 1) * sizeof(char *));
               localSemordnilaps[semIndex] = strdup(words[i]);
               semIndex++;
-              localSemordnilapCount++;
+              sums[threadId][1]++;
             }
         }
       }
 
     #pragma omp critical 
     {
-      palindromeCount += localPalindromeCount;
-      semordnilapCount += localSemordnilapCount;
+      //Palindromes
+      int transferIndex = palindromeCount;
+      palindromeCount = palindromeCount + palIndex;
+      resultPalindromes = realloc(resultPalindromes, (palindromeCount + 1) * sizeof(char *));
+      for (int i = 0; i < palIndex; i++){
+        resultPalindromes[transferIndex] = strdup(localPalindromes[i]);
+        transferIndex++;
+      }
+      //Semordnilaps
+      transferIndex = semordnilapCount;
+      semordnilapCount = semordnilapCount + semIndex;
+      resultSemordnilaps = realloc(resultSemordnilaps, (semordnilapCount + 1) * sizeof(char *));
+      for (int i = 0; i < semIndex; i++){
+        resultSemordnilaps[transferIndex] = strdup(localSemordnilaps[i]);
+        transferIndex++;
+      }
     }
   }
+
+  writeResultsToFile("results.txt", palindromeCount, semordnilapCount, resultPalindromes, resultSemordnilaps);
+  printResults(10.0, 12.0, numWorkers, TOTAL_WORDS, palindromeCount, semordnilapCount, sums);
 }
 //End of document
