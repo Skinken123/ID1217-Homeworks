@@ -33,9 +33,11 @@ char **resultPalindromes = NULL; // Dynamic array for palindromes
 char **resultSemordnilaps = NULL; // Dynamic array for Semordnilaps
 char **words = NULL; // Array of words
 
-int main(int argc, char *argv[]) {
-  long l; /* use long in case of a 64-bit system */
+void worker(){
 
+}
+
+int main(int argc, char *argv[]) {
   /* read command line args if any */
   numWorkers = (argc > 1)? atoi(argv[1]) : MAXWORKERS;
   if (numWorkers > MAXWORKERS) numWorkers = MAXWORKERS;
