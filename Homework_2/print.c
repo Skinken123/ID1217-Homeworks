@@ -73,6 +73,6 @@ void writeResultsToFile(const char *filename, int palindromeCount, int semordnil
 void printSpeedUp(double (*programTime)[2], int argc) {
     printf("Index\tExecution Time\tThreads\n");
     for (int i = 0; i < argc; i++) {
-        printf("%d\t%.6f\t\t%.0f\t%.2f\n", i + 1, programTime[i][0], programTime[i][1], programTime[0][0] / programTime[i][0]);
+        printf("%d\t%.8f\t\t%.0f\t%.2f\n", i + 1, programTime[i][0], programTime[i][1], programTime[0][0] / programTime[i][0]);
     }
 }
