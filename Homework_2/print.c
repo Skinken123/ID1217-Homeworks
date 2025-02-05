@@ -49,8 +49,10 @@ void printResults(double avgExecutionTime, int numWorkers, int totalWords, int p
 }
 
 /* Function to write results to a file */
-void writeResultsToFile(const char *filename, int palindromeCount, int semordnilapCount, char **resultPalindromes, char **resultSemordnilaps) {
-    FILE *file = fopen(filename, "w");
+void writeResultsToFile(int palindromeCount, int semordnilapCount, char **resultPalindromes, char **resultSemordnilaps, int wordIndex) {
+    char destFile[12];
+    sprintf(destFile, "results%d.txt", wordIndex);
+    FILE *file = fopen(destFile, "w");
     if (file == NULL) {
         perror("Error opening file for writing");
         return;
@@ -70,12 +72,17 @@ void writeResultsToFile(const char *filename, int palindromeCount, int semordnil
   fclose(file);
 }
 
-void printSpeedUp(double (*programTime)[2], int argc) {
+void printSpeedUp(double (*programTime)[2], int argc, int totWords) {
     // Print the header
     printf("\n");
     for (int i = 0; i < BOX_WIDTH; i++) printf("=");
     printf("\n| %-*s %-*s |\n", 40, "Speedup Analysis", BOX_WIDTH - 40 - 5, "");
     for (int i = 0; i < BOX_WIDTH; i++) printf("=");
+    printf("\n");
+
+    // Total words
+    printf("| %-40s %10d |\n", "Total number of words:", totWords);
+    for (int i = 0; i < BOX_WIDTH; i++) printf("-");
     printf("\n");
 
     // Table header
