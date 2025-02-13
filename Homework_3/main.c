@@ -12,10 +12,10 @@
 #define SHARED 1
 #define MAX_WORKERS 16
 
-// Semophores 
+// Semaphores
 sem_t enterBathroom, womenWait, menWait;
 
-// Counters 
+// Counters
 int nrOfWaitingMen = 0, nrOfWaitingWomen = 0, nrOfPeopleInBathroom = 0;
 char currentGender = 'N'; // 'M' for men, 'W' for women, 'N' for none
 
@@ -25,27 +25,30 @@ void *man(void *arg) {
         sleep(rand() % 3 + 1);
 
         sem_wait(&enterBathroom);
-        if (currentGender == 'W') {
+        if (currentGender == 'W' || nrOfPeopleInBathroom > 0) {
             nrOfWaitingMen++;
             sem_post(&enterBathroom);
-            sem_wait(&menWait);
-        } else {
-            currentGender = 'M';
-            nrOfPeopleInBathroom++;
-            sem_post(&enterBathroom);
+            sem_wait(&menWait); // Wait until allowed in
         }
 
-        printf("Man %ld entered the bathroom. (Men in: %d)\n", myid, nrOfPeopleInBathroom);
+        // Enter bathroom
+        sem_wait(&enterBathroom);
+        nrOfPeopleInBathroom++;
+        currentGender = 'M';
+        printf("Man %d entered the bathroom. (Men in: %d)\n", myid, nrOfPeopleInBathroom);
+        sem_post(&enterBathroom);
+
         sleep(rand() % 2 + 1);
 
+        // Leaving bathroom
         sem_wait(&enterBathroom);
         nrOfPeopleInBathroom--;
-        printf("Man %ld left the bathroom. (Men remaining: %d)\n", myid, nrOfPeopleInBathroom);
+        printf("Man %d left the bathroom. (Men remaining: %d)\n", myid, nrOfPeopleInBathroom);
 
         if (nrOfPeopleInBathroom == 0) {
             currentGender = 'N';
             if (nrOfWaitingWomen > 0) {
-                nrOfWaitingWomen --;
+                nrOfWaitingWomen--;
                 currentGender = 'W';
                 sem_post(&womenWait);
             } else if (nrOfWaitingMen > 0) {
@@ -53,8 +56,6 @@ void *man(void *arg) {
                 currentGender = 'M';
                 sem_post(&menWait);
             }
-        } else {
-            sem_post(&menWait);
         }
         sem_post(&enterBathroom);
     }
@@ -67,36 +68,37 @@ void *women(void *arg) {
         sleep(rand() % 3 + 1);
 
         sem_wait(&enterBathroom);
-        if (currentGender == 'M') {
+        if (currentGender == 'M' || nrOfPeopleInBathroom > 0) {
             nrOfWaitingWomen++;
             sem_post(&enterBathroom);
-            sem_wait(&womenWait);
-        } else {
-            currentGender = 'W';
-            nrOfPeopleInBathroom++;
-            sem_post(&enterBathroom);
+            sem_wait(&womenWait); // Wait until allowed in
         }
 
-        printf("Woman %ld entered the bathroom. (Women in: %d)\n", myid, nrOfPeopleInBathroom);
+        // Enter bathroom
+        sem_wait(&enterBathroom);
+        nrOfPeopleInBathroom++;
+        currentGender = 'W';
+        printf("Woman %d entered the bathroom. (Women in: %d)\n", myid, nrOfPeopleInBathroom);
+        sem_post(&enterBathroom);
+
         sleep(rand() % 2 + 1);
 
+        // Leaving bathroom
         sem_wait(&enterBathroom);
         nrOfPeopleInBathroom--;
-        printf("Woman %ld left the bathroom. (Women remaining: %d)\n", myid, nrOfPeopleInBathroom);
+        printf("Woman %d left the bathroom. (Women remaining: %d)\n", myid, nrOfPeopleInBathroom);
 
         if (nrOfPeopleInBathroom == 0) {
             currentGender = 'N';
             if (nrOfWaitingMen > 0) {
-                nrOfWaitingMen --;
+                nrOfWaitingMen--;
                 currentGender = 'M';
                 sem_post(&menWait);
             } else if (nrOfWaitingWomen > 0) {
-                nrOfWaitingWomen --;
+                nrOfWaitingWomen--;
                 currentGender = 'W';
                 sem_post(&womenWait);
             }
-        } else {
-            sem_post(&womenWait);
         }
         sem_post(&enterBathroom);
     }
@@ -124,8 +126,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    for (long l = 0; l < MAX_WORKERS; l++) {
-        pthread_join(workers[l], NULL);
+    for (int i = 0; i < MAX_WORKERS; i++) {
+        pthread_join(workers[i], NULL);
     }
 
     sem_destroy(&enterBathroom);
