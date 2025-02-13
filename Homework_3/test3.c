@@ -10,7 +10,7 @@
 #include <time.h>
 
 #define SHARED 0
-#define MAX_WORKERS 8
+#define MAX_WORKERS 16
 
 // Semaphores
 sem_t bathroom, womenWait, menWait;
@@ -41,14 +41,24 @@ void *man(void *arg) {
             sem_post(&bathroom);
         }
         //Sleep on toilet or watch yt video
-        sleep(rand() % 2);
+        sleep(rand() % 2 + 2);
         //Exit bathroom
         sem_wait(&bathroom);
         nrOfPeopleInBathroom--;
         printf("Man %d left the bathroom. (Men remaining: %d)\n", myid, nrOfPeopleInBathroom);
-        if (nrOfPeopleInBathroom == 0 && nrOfWaitingWomen > 0) {
-            printf("Women can now enter bathroom\n");
-            sem_post(&womenWait);
+        if (nrOfPeopleInBathroom == 0) {
+            if (nrOfWaitingWomen > 0) {
+                printf("Women can now enter bathroom\n\n");
+                nrOfWaitingWomen--;
+                sem_post(&womenWait);
+            } else if(nrOfWaitingMen > 0){
+                printf("No women were waiting, men can enter\n\n");
+                nrOfWaitingMen--;
+                sem_post(&menWait);
+            } else{
+                printf("No one was waiting, anyone can enter\n\n");
+                sem_post(&bathroom);
+            }
         } else {
             sem_post(&bathroom);
         }
@@ -81,9 +91,19 @@ void *women(void *arg) {
         sem_wait(&bathroom);
         nrOfPeopleInBathroom--;
         printf("Woman %d left the bathroom. (Woman remaining: %d)\n", myid, nrOfPeopleInBathroom);
-        if (nrOfPeopleInBathroom == 0 && nrOfWaitingMen > 0) {
-            printf("Men can now enter bathroom\n");
-            sem_post(&menWait);
+        if (nrOfPeopleInBathroom == 0) {
+            if (nrOfWaitingMen > 0) {
+                printf("Men can now enter bathroom\n\n");
+                nrOfWaitingMen--;
+                sem_post(&menWait);
+            } else if(nrOfWaitingWomen > 0){
+                printf("No men were waiting, men can enter\n\n");
+                nrOfWaitingWomen--;
+                sem_post(&womenWait);
+            } else{
+                printf("No one was waiting, anyone can enter\n\n");
+                sem_post(&bathroom);
+            }
         } else {
             sem_post(&bathroom);
         }
@@ -100,13 +120,10 @@ int main(int argc, char *argv[]) {
     sem_init(&womenWait, SHARED, 0);
     sem_init(&menWait, SHARED, 0);
 
-    for (int i = 0; i < MAX_WORKERS; i++) {
+    for (int i = 0; i < MAX_WORKERS/2; i++) {
         thread_ids[i] = i;
-        if (i % 2 == 0) {
-            pthread_create(&workers[i], &attr, women, &thread_ids[i]);
-        } else {
-            pthread_create(&workers[i], &attr, man, &thread_ids[i]);
-        }
+        pthread_create(&workers[i], &attr, women, &thread_ids[i]);
+        pthread_create(&workers[i], &attr, man, &thread_ids[i]);
     }
     pthread_exit(NULL);
 }
