@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
       }
 
       double totalExecutionTime = 0;
-      for(int i = 0; i < 200; i++) {
+      for(int i = 0; i < 100; i++) {
         palindromeCount = 0;
         semordnilapCount = 0;
         start_time = omp_get_wtime();
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 
         totalExecutionTime += (end_time - start_time);
       }
-      double avgExecutionTime = totalExecutionTime / 200;
+      double avgExecutionTime = totalExecutionTime / 100;
       programTime[argIndex-1][0] = avgExecutionTime;
       programTime[argIndex-1][1] = atoi(argv[argIndex]); 
     }
