@@ -10,99 +10,86 @@
 #include <time.h>
 
 #define SHARED 1
-#define MAX_WORKERS 16
+#define MAX_WORKERS 6
 
 // Semaphores
-sem_t enterBathroom, womenWait, menWait;
+sem_t bathroom, womenWait, menWait;
 
 // Counters
 int nrOfWaitingMen = 0, nrOfWaitingWomen = 0, nrOfPeopleInBathroom = 0;
 char currentGender = 'N'; // 'M' for men, 'W' for women, 'N' for none
 
+//Timer
+
+
 void *man(void *arg) {
-    int myid = *(int *)arg;
-    while(1) {
+    int myid = *(int *) arg;
+    while (1) {
+        //Begin working
         sleep(rand() % 3 + 1);
-
-        sem_wait(&enterBathroom);
-        if (currentGender == 'W' || nrOfPeopleInBathroom > 0) {
+        //Stop working want to go toilet
+        sem_wait(&bathroom);
+        if (nrOfPeopleInBathroom > 0) {
             nrOfWaitingMen++;
-            sem_post(&enterBathroom);
-            sem_wait(&menWait); // Wait until allowed in
+            sem_post(&bathroom);
+            sem_wait(&menWait);
         }
-
-        // Enter bathroom
-        sem_wait(&enterBathroom);
         nrOfPeopleInBathroom++;
-        currentGender = 'M';
-        printf("Man %d entered the bathroom. (Men in: %d)\n", myid, nrOfPeopleInBathroom);
-        sem_post(&enterBathroom);
-
-        sleep(rand() % 2 + 1);
-
-        // Leaving bathroom
-        sem_wait(&enterBathroom);
+        printf("Man %d entered the bathroom. (Men remaining: %d)\n", myid, nrOfPeopleInBathroom);
+        if (nrOfWaitingMen > 0) {
+            nrOfWaitingMen--;
+            sem_post(&menWait);
+        } else {
+            sem_post(&bathroom);
+        }
+        //Sleep on toilet or watch yt video
+        sleep(rand() % 2);
+        //Exit bathroom
+        sem_wait(&bathroom);
         nrOfPeopleInBathroom--;
         printf("Man %d left the bathroom. (Men remaining: %d)\n", myid, nrOfPeopleInBathroom);
-
-        if (nrOfPeopleInBathroom == 0) {
-            currentGender = 'N';
-            if (nrOfWaitingWomen > 0) {
-                nrOfWaitingWomen--;
-                currentGender = 'W';
-                sem_post(&womenWait);
-            } else if (nrOfWaitingMen > 0) {
-                nrOfWaitingMen--;
-                currentGender = 'M';
-                sem_post(&menWait);
-            }
+        if (nrOfPeopleInBathroom == 0 && nrOfWaitingWomen > 0) {
+            printf("Women can now enter bathroom");
+            sem_post(&womenWait);
+        } else {
+            sem_post(&bathroom);
         }
-        sem_post(&enterBathroom);
     }
-    return NULL;
 }
 
 void *women(void *arg) {
-    int myid = *(int *)arg;
-    while(1) {
+    int myid = *(int *) arg;
+    while (1) {
+        //Begin working
         sleep(rand() % 3 + 1);
-
-        sem_wait(&enterBathroom);
-        if (currentGender == 'M' || nrOfPeopleInBathroom > 0) {
+        //Stop working want to go toilet
+        sem_wait(&bathroom);
+        if (nrOfPeopleInBathroom > 0) {
             nrOfWaitingWomen++;
-            sem_post(&enterBathroom);
-            sem_wait(&womenWait); // Wait until allowed in
+            sem_post(&bathroom);
+            sem_wait(&womenWait);
         }
-
-        // Enter bathroom
-        sem_wait(&enterBathroom);
         nrOfPeopleInBathroom++;
-        currentGender = 'W';
-        printf("Woman %d entered the bathroom. (Women in: %d)\n", myid, nrOfPeopleInBathroom);
-        sem_post(&enterBathroom);
-
-        sleep(rand() % 2 + 1);
-
-        // Leaving bathroom
-        sem_wait(&enterBathroom);
-        nrOfPeopleInBathroom--;
-        printf("Woman %d left the bathroom. (Women remaining: %d)\n", myid, nrOfPeopleInBathroom);
-
-        if (nrOfPeopleInBathroom == 0) {
-            currentGender = 'N';
-            if (nrOfWaitingMen > 0) {
-                nrOfWaitingMen--;
-                currentGender = 'M';
-                sem_post(&menWait);
-            } else if (nrOfWaitingWomen > 0) {
-                nrOfWaitingWomen--;
-                currentGender = 'W';
-                sem_post(&womenWait);
-            }
+        printf("Woman %d entered the bathroom. (Woman remaining: %d)\n", myid, nrOfPeopleInBathroom);
+        if (nrOfWaitingWomen > 0) {
+            nrOfWaitingWomen--;
+            sem_post(&womenWait);
+        } else {
+            sem_post(&bathroom);
         }
-        sem_post(&enterBathroom);
+        //Sleep on toilet or watch yt video
+        sleep(rand() % 2);
+        //Exit bathroom
+        sem_wait(&bathroom);
+        nrOfPeopleInBathroom--;
+        printf("Woman %d left the bathroom. (Woman remaining: %d)\n", myid, nrOfPeopleInBathroom);
+        if (nrOfPeopleInBathroom == 0 && nrOfWaitingMen > 0) {
+            printf("Men can now enter bathroom");
+            sem_post(&menWait);
+        } else {
+            sem_post(&bathroom);
+        }
     }
-    return NULL;
 }
 
 int main(int argc, char *argv[]) {
@@ -111,11 +98,9 @@ int main(int argc, char *argv[]) {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
-    sem_init(&enterBathroom, SHARED, 1);
+    sem_init(&bathroom, SHARED, 1);
     sem_init(&womenWait, SHARED, 0);
     sem_init(&menWait, SHARED, 0);
-
-    srand(time(NULL));
 
     for (int i = 0; i < MAX_WORKERS; i++) {
         thread_ids[i] = i;
@@ -125,12 +110,5 @@ int main(int argc, char *argv[]) {
             pthread_create(&workers[i], &attr, man, &thread_ids[i]);
         }
     }
-
-    for (int i = 0; i < MAX_WORKERS; i++) {
-        pthread_join(workers[i], NULL);
-    }
-
-    sem_destroy(&enterBathroom);
-    sem_destroy(&womenWait);
-    sem_destroy(&menWait);
+    pthread_exit(NULL);
 }
