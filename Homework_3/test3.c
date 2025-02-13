@@ -12,6 +12,12 @@
 #define SHARED 0
 #define MAX_WORKERS 16
 
+#define BLUE "\x1B[34m"
+#define RED "\x1B[31m"
+#define GREEN "\x1B[32m"
+#define PINK "\x1B[95m"
+#define RESET "\x1B[0m"
+
 // Semaphores
 sem_t bathroom, womenWait, menWait;
 
@@ -33,7 +39,7 @@ void *man(void *arg) {
             sem_wait(&menWait);
         }
         nrOfPeopleInBathroom++;
-        printf("Man %d entered the bathroom. (Men remaining: %d)\n", myid, nrOfPeopleInBathroom);
+        printf(BLUE "Man "RESET"%d "GREEN"entered "RESET"the bathroom. ("BLUE"Men "RESET"remaining: %d)\n", myid, nrOfPeopleInBathroom);
         if (nrOfWaitingMen > 0) {
             nrOfWaitingMen--;
             sem_post(&menWait);
@@ -45,18 +51,18 @@ void *man(void *arg) {
         //Exit bathroom
         sem_wait(&bathroom);
         nrOfPeopleInBathroom--;
-        printf("Man %d left the bathroom. (Men remaining: %d)\n", myid, nrOfPeopleInBathroom);
+        printf(BLUE "Man "RESET"%d "RED"left "RESET"the bathroom. ("BLUE"Men "RESET"remaining: %d)\n", myid, nrOfPeopleInBathroom);
         if (nrOfPeopleInBathroom == 0) {
             if (nrOfWaitingWomen > 0) {
-                printf("Women can now enter bathroom\n\n");
+                printf(PINK"Women "RESET"can now "GREEN"enter "RESET"bathroom\n\n");
                 nrOfWaitingWomen--;
                 sem_post(&womenWait);
             } else if(nrOfWaitingMen > 0){
-                printf("No women were waiting, men can enter\n\n");
+                printf("No "PINK"women "RESET"were waiting, "BLUE"men "RESET"can enter\n\n");
                 nrOfWaitingMen--;
                 sem_post(&menWait);
             } else{
-                printf("No one was waiting, anyone can enter\n\n");
+                printf("No one was waiting, anyone can "GREEN"enter\n\n"RESET);
                 sem_post(&bathroom);
             }
         } else {
@@ -78,7 +84,7 @@ void *women(void *arg) {
             sem_wait(&womenWait);
         }
         nrOfPeopleInBathroom++;
-        printf("Woman %d entered the bathroom. (Woman remaining: %d)\n", myid, nrOfPeopleInBathroom);
+        printf(PINK"Woman "RESET"%d "GREEN"entered "RESET"the bathroom. ("PINK"Woman "RESET"remaining: %d)\n", myid, nrOfPeopleInBathroom);
         if (nrOfWaitingWomen > 0) {
             nrOfWaitingWomen--;
             sem_post(&womenWait);
@@ -90,18 +96,18 @@ void *women(void *arg) {
         //Exit bathroom
         sem_wait(&bathroom);
         nrOfPeopleInBathroom--;
-        printf("Woman %d left the bathroom. (Woman remaining: %d)\n", myid, nrOfPeopleInBathroom);
+        printf(PINK"Woman "RESET"%d "RED"left "RESET"the bathroom. ("PINK"Woman "RESET"remaining: %d)\n", myid, nrOfPeopleInBathroom);
         if (nrOfPeopleInBathroom == 0) {
             if (nrOfWaitingMen > 0) {
-                printf("Men can now enter bathroom\n\n");
+                printf(BLUE"Men "RESET"can now "GREEN"enter "RESET"bathroom\n\n");
                 nrOfWaitingMen--;
                 sem_post(&menWait);
             } else if(nrOfWaitingWomen > 0){
-                printf("No men were waiting, men can enter\n\n");
+                printf("No "BLUE"men "RESET"were waiting, "PINK"women "RESET"can enter\n\n");
                 nrOfWaitingWomen--;
                 sem_post(&womenWait);
             } else{
-                printf("No one was waiting, anyone can enter\n\n");
+                printf("No one was waiting, anyone can "GREEN"enter\n\n"RESET);
                 sem_post(&bathroom);
             }
         } else {
