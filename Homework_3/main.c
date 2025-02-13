@@ -9,8 +9,8 @@
 #include <unistd.h>
 #include <time.h>
 
-#define SHARED 1
-#define MAX_WORKERS 16
+#define SHARED 0
+#define MAX_WORKERS 8
 
 // Semaphores
 sem_t mutex;      // Protects the shared state
@@ -30,6 +30,7 @@ void *man(void *arg) {
 
         // Request to enter the bathroom
         sem_wait(&mutex);
+        printf("Man aquired mutex\n");
         if (nrOfPeopleInBathroom == 0) {
             // Bathroom is empty; set current gender to male.
             currentGender = 'M';
@@ -44,6 +45,7 @@ void *man(void *arg) {
                 sem_post(&menWait);
             } else {
                 sem_post(&mutex);
+                printf("Man released mutex\n");
             }
         } else {
             // Bathroom is occupied by women. Must wait.
@@ -94,6 +96,7 @@ void *women(void *arg) {
 
         // Request to enter the bathroom
         sem_wait(&mutex);
+        printf("Woman aquired mutex\n");
         if (nrOfPeopleInBathroom == 0) {
             // Bathroom is empty; set current gender to female.
             currentGender = 'W';
@@ -108,6 +111,7 @@ void *women(void *arg) {
                 sem_post(&womenWait);
             } else {
                 sem_post(&mutex);
+                printf("Woman released mutex\n");
             }
         } else {
             // Bathroom is occupied by men. Must wait.
