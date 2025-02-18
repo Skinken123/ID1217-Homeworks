@@ -14,6 +14,15 @@ public class Person extends Thread {
 
     @Override
     public void run() {
-
+        try {
+            while (true) {
+                Thread.sleep((random.nextInt(3) + 1) * 1000);
+                bathroom.enterBathroom(gender, id);
+                Thread.sleep((random.nextInt(2) + 2) * 1000);
+                bathroom.leaveBathroom(gender, id);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
