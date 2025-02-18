@@ -7,6 +7,12 @@ public class Bathroom {
     private final Object menWait = new Object();
     private final Object womanWait = new Object();
 
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PINK = "\u001B[35m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_RED = "\u001B[31m";
+
     private int nrOfWaitingMen = 0, nrOfWaitingWomen = 0, nrOfPeopleInBathroom = 0;
     //private char currentGender = 'N'; // 'M' for men, 'W' for women, 'N' for none 
  
@@ -19,7 +25,7 @@ public class Bathroom {
         }
         synchronized (bathroom) {
             nrOfPeopleInBathroom++;
-            System.out.println("Man " + threadId + " entered the bathroom at time " + LocalTime.now() + "\n");
+            System.out.println(ANSI_BLUE + "Man " + ANSI_RESET + threadId + ANSI_GREEN + " entered" + ANSI_RESET + " the bathroom at time " + LocalTime.now() + "\n");
             synchronized (menWait) {
                 if (nrOfWaitingMen > 0 && nrOfWaitingWomen < 2) { // maybe if there are more than 2 women waiting they should be let in
                     nrOfWaitingMen--;
@@ -34,7 +40,7 @@ public class Bathroom {
     public void manExit(int threadId) throws InterruptedException {
         synchronized (bathroom) {
             nrOfPeopleInBathroom--;
-            System.out.println("Man " + threadId + " left the bathroom at time " + LocalTime.now() + "\n");
+            System.out.println(ANSI_BLUE + "Man " + ANSI_RESET + threadId + ANSI_RED + " left" + ANSI_RESET + " the bathroom at time " + LocalTime.now() + "\n");
             if (nrOfPeopleInBathroom == 0){
                 synchronized(womanWait) {
                     if (nrOfWaitingWomen > 0) {
@@ -60,7 +66,7 @@ public class Bathroom {
         }
         synchronized (bathroom) {
             nrOfPeopleInBathroom++;
-            System.out.println("Woman " + threadId + " entered the bathroom at time " + LocalTime.now() + "\n");
+            System.out.println(ANSI_PINK + "Woman " + ANSI_RESET + threadId + ANSI_GREEN + " entered" + ANSI_RESET + " the bathroom at time " + LocalTime.now() + "\n");
             synchronized (womanWait) {
                 if (nrOfWaitingWomen > 0 && nrOfWaitingMen < 2) { // maybe if there are more than 2 women waiting they should be let in
                     nrOfWaitingWomen--;
@@ -75,7 +81,7 @@ public class Bathroom {
     public void womanExit(int threadId) throws InterruptedException {
         synchronized (bathroom) {
             nrOfPeopleInBathroom--;
-            System.out.println("Woman " + threadId + " left the bathroom at time " + LocalTime.now() + "\n");
+            System.out.println(ANSI_PINK + "Woman " + ANSI_RESET + threadId + ANSI_RED + " left" + ANSI_RESET + " the bathroom at time " + LocalTime.now() + "\n");
             if (nrOfPeopleInBathroom == 0){
                 synchronized(menWait) {
                     if (nrOfWaitingMen > 0) {
