@@ -1,4 +1,4 @@
-public class Main {
+public class MainProgram {
     public static void main(String[] args) {
         final int MAX_WORKERS = 16;
         Bathroom bathroom = new Bathroom();
