@@ -4,8 +4,8 @@ public class Main {
         Bathroom bathroom = new Bathroom();
 
         for (int i = 0; i < MAX_WORKERS / 2; i++) {
-            new Person(bathroom, 'M', i).start();
-            new Person(bathroom, 'W', i).start();
+            new Thread(new Person(bathroom, 'M', i)).start();
+            new Thread(new Person(bathroom, 'W', i)).start();  
         }
     }
 }

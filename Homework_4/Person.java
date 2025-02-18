@@ -1,6 +1,6 @@
 import java.util.Random;
 
-public class Person extends Thread {
+public class Person implements Runnable {
     private Bathroom bathroom;
     private char gender;
     private int id;
@@ -17,9 +17,11 @@ public class Person extends Thread {
         try {
             while (true) {
                 Thread.sleep((random.nextInt(3) + 1) * 1000);
-                bathroom.enterBathroom(gender, id);
+                if (this.gender == 'M') bathroom.manEnter(this.id);
+                else bathroom.womanEnter(this.id);
                 Thread.sleep((random.nextInt(2) + 2) * 1000);
-                bathroom.leaveBathroom(gender, id);
+                if (this.gender == 'M') bathroom.manExit(this.id);
+                else bathroom.womanExit(this.id);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

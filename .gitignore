@@ -6,3 +6,6 @@
 
 # Ignore results file
 *.txt
+
+# Ignore class files
+*.class
