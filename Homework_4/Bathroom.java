@@ -1,10 +1,11 @@
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 public class Bathroom {
-    //Block synchronization
-    private final Object bathroom = new Object();
-    private final Object menWait = new Object();
-    private final Object womanWait = new Object();
+    private final Object lock = new Object();
+    private int menWaiting = 0, womenWaiting = 0;
+    private int menInBathroom = 0, womenInBathroom = 0;
+    private BathroomState bathroomState = null;
 
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_BLUE = "\u001B[34m";
@@ -12,88 +13,78 @@ public class Bathroom {
     public static final String ANSI_GREEN = "\u001B[32m";
     public static final String ANSI_RED = "\u001B[31m";
 
-    private int nrOfWaitingMen = 0, nrOfWaitingWomen = 0, nrOfPeopleInBathroom = 0;
-    //private char currentGender = 'N'; // 'M' for men, 'W' for women, 'N' for none 
- 
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+    public enum BathroomState {
+        MenEntering,
+        MenLeaving,
+        WomenEntering,
+        WomenLeaving
+    }
+
     public void manEnter(int threadId) throws InterruptedException {
-        synchronized (menWait) {
-            if (nrOfPeopleInBathroom > 0) {
-                nrOfWaitingMen++;
-                menWait.wait();
+        synchronized (lock) {
+            menWaiting++;
+            while (womenInBathroom > 0 || bathroomState == BathroomState.WomenEntering || (bathroomState == BathroomState.MenLeaving && womenWaiting > 0)) {
+                lock.wait();
             }
-        }
-        synchronized (bathroom) {
-            nrOfPeopleInBathroom++;
-            System.out.println(ANSI_BLUE + "Man " + ANSI_RESET + threadId + ANSI_GREEN + " entered" + ANSI_RESET + " the bathroom at time " + LocalTime.now() + "\n");
-            synchronized (menWait) {
-                if (nrOfWaitingMen > 0 && nrOfWaitingWomen < 2) { // maybe if there are more than 2 women waiting they should be let in
-                    nrOfWaitingMen--;
-                    menWait.notify();
-                } else if (nrOfWaitingMen > 0) {
-                    nrOfWaitingMen--;
-                }
-            }
+            
+            menWaiting--;
+            if (bathroomState != BathroomState.MenLeaving)
+                bathroomState = BathroomState.MenEntering;
+            
+            menInBathroom++;
+            System.out.println(ANSI_BLUE + "♂ Man ♂ " + ANSI_RESET + threadId + ANSI_GREEN + " entered" + ANSI_RESET + " the bathroom at time " + LocalTime.now().format(TIME_FORMATTER) + "     |");
         }
     }
 
-    public void manExit(int threadId) throws InterruptedException {
-        synchronized (bathroom) {
-            nrOfPeopleInBathroom--;
-            System.out.println(ANSI_BLUE + "Man " + ANSI_RESET + threadId + ANSI_RED + " left" + ANSI_RESET + " the bathroom at time " + LocalTime.now() + "\n");
-            if (nrOfPeopleInBathroom == 0){
-                synchronized(womanWait) {
-                    if (nrOfWaitingWomen > 0) {
-                        nrOfWaitingWomen--;
-                        womanWait.notify();
-                    } else if (nrOfWaitingMen > 0) {
-                        synchronized (menWait) {
-                            nrOfWaitingMen--;
-                            menWait.notify();
-                        }
-                    }
-                }
+    public void manExit(int threadId) {
+        synchronized (lock) {
+            bathroomState = BathroomState.MenLeaving;
+            menInBathroom--;
+            
+            System.out.println(ANSI_BLUE + "♂ Man ♂ " + ANSI_RESET + threadId + ANSI_RED + " left" + ANSI_RESET + " the bathroom at time " + LocalTime.now().format(TIME_FORMATTER) + "        |");
+
+            if (menInBathroom == 0) {
+                if (womenWaiting > 0)
+                    bathroomState = BathroomState.WomenEntering;
+                else
+                    bathroomState = null;
             }
+            lock.notifyAll();
         }
     }
 
     public void womanEnter(int threadId) throws InterruptedException {
-        synchronized (womanWait) {
-            if (nrOfPeopleInBathroom > 0) {
-                nrOfWaitingWomen++;
-                womanWait.wait();
+        synchronized (lock) {
+            womenWaiting++;
+            while (menInBathroom > 0 || bathroomState == BathroomState.MenEntering || (bathroomState == BathroomState.WomenLeaving && menWaiting > 0)) {
+                lock.wait();
             }
-        }
-        synchronized (bathroom) {
-            nrOfPeopleInBathroom++;
-            System.out.println(ANSI_PINK + "Woman " + ANSI_RESET + threadId + ANSI_GREEN + " entered" + ANSI_RESET + " the bathroom at time " + LocalTime.now() + "\n");
-            synchronized (womanWait) {
-                if (nrOfWaitingWomen > 0 && nrOfWaitingMen < 2) { // maybe if there are more than 2 women waiting they should be let in
-                    nrOfWaitingWomen--;
-                    womanWait.notify();
-                } else if (nrOfWaitingWomen > 0) {
-                    nrOfWaitingWomen--;
-                }
-            }
+
+            womenWaiting--;
+            if (bathroomState != BathroomState.WomenLeaving)
+                bathroomState = BathroomState.WomenEntering;
+            
+            womenInBathroom++;
+            System.out.println(ANSI_PINK + "♀ Woman ♀ " + ANSI_RESET + threadId + ANSI_GREEN + " entered" + ANSI_RESET + " the bathroom at time " + LocalTime.now().format(TIME_FORMATTER)+ "   |");
         }
     }
 
-    public void womanExit(int threadId) throws InterruptedException {
-        synchronized (bathroom) {
-            nrOfPeopleInBathroom--;
-            System.out.println(ANSI_PINK + "Woman " + ANSI_RESET + threadId + ANSI_RED + " left" + ANSI_RESET + " the bathroom at time " + LocalTime.now() + "\n");
-            if (nrOfPeopleInBathroom == 0){
-                synchronized(menWait) {
-                    if (nrOfWaitingMen > 0) {
-                        nrOfWaitingMen--;
-                        menWait.notify();
-                    } else if (nrOfWaitingWomen > 0) {
-                        synchronized (womanWait) {
-                            nrOfWaitingWomen--;
-                            womanWait.notify();
-                        }
-                    }
-                }
+    public void womanExit(int threadId) {
+        synchronized (lock) {
+            bathroomState = BathroomState.WomenLeaving;
+            womenInBathroom--;
+            
+            System.out.println(ANSI_PINK + "♀ Woman ♀ " + ANSI_RESET + threadId + ANSI_RED + " left" + ANSI_RESET + " the bathroom at time " + LocalTime.now().format(TIME_FORMATTER) + "      |");
+
+            if (womenInBathroom == 0) {
+                if (menWaiting > 0)
+                    bathroomState = BathroomState.MenEntering;
+                else
+                    bathroomState = null;
             }
+            lock.notifyAll();
         }
     }
- }
+}
