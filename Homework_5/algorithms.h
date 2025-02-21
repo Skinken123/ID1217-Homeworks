@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-void centralized_solution();
-void symmetric_solution();
-void ring_solution();
+void centralizedSolution();
+void symmetricSolution();
+void ringSolution();
 
 #endif /* ALGORITHMS_H */
