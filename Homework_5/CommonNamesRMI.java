@@ -107,7 +107,7 @@ public class CommonNamesRMI {
 
     // Initializes and runs a process with specified data and port
     private static void runProcess(String name, List<String> data, int port) throws Exception {
-        LocateRegistry.createRegistry(port);   // Create RMI registry on the specified port
+        LocateRegistry.createRegistry(port);   // Create RMI registry on the specified port, a place for the server to register services it offers and a place for clients to query
         
         // Create an anonymous subclass of AbstractProcess with a custom getProcessName implementation
         AbstractProcess process = new AbstractProcess(data) {
